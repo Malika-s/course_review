@@ -499,6 +499,161 @@
     .card { padding: 15px 16px; }
     .course-tab { max-width: 100%; flex: 1 1 100%; }
   }
+
+  /* ---------- new-analysis form ---------- */
+
+  .course-tab.new-tab {
+    border-style: dashed;
+    color: var(--accent);
+  }
+  .course-tab.new-tab .tab-name { color: var(--accent); }
+
+  .analysis-form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .form-note {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .form-note strong { color: var(--accent); }
+
+  .form-row {
+    margin-bottom: 16px;
+  }
+
+  .form-row label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .form-row .hint {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-weight: 400;
+    display: block;
+    margin-top: 4px;
+  }
+
+  .form-row input[type="text"],
+  .form-row input[type="password"],
+  .form-row textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+
+  .form-row textarea {
+    min-height: 220px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  .form-row input:focus-visible,
+  .form-row textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 560px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .checkbox-row input { accent-color: var(--accent); }
+
+  .file-btn-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .file-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: var(--radius);
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  .run-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    padding: 11px 20px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .run-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  .form-error {
+    background: var(--critical-soft);
+    border: 1px solid var(--critical);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-top: 16px;
+    line-height: 1.55;
+  }
+
+  .form-status {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 14px;
+  }
+
+  .remove-course-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-size: 12.5px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body>
@@ -701,6 +856,30 @@
     }
   ];
 
+  var NEW_TAB_ID = "__new__";
+  var CUSTOM_COURSES_KEY = "course-qa-custom-courses";
+
+  function loadCustomCourses() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_COURSES_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCustomCourses(list) {
+    try {
+      localStorage.setItem(CUSTOM_COURSES_KEY, JSON.stringify(list));
+    } catch (e) {
+      /* storage unavailable — new courses just won't survive a reload */
+    }
+  }
+
+  // Custom courses generated via the "New analysis" form are appended here,
+  // and persisted separately from the built-in COURSES array above.
+  loadCustomCourses().forEach(function (c) { COURSES.push(c); });
+
   var activeCourseId = COURSES[0].id;
   var activeFilters = { critical: true, high: true, medium: true, low: true, gap: true };
   var searchTerm = "";
@@ -759,6 +938,15 @@
       });
       el.appendChild(btn);
     });
+
+    var newBtn = document.createElement("button");
+    newBtn.className = "course-tab new-tab" + (activeCourseId === NEW_TAB_ID ? " active" : "");
+    newBtn.innerHTML = '<span class="tab-name">+ New analysis</span><span class="tab-meta">Paste a transcript</span>';
+    newBtn.addEventListener("click", function () {
+      activeCourseId = NEW_TAB_ID;
+      renderAll();
+    });
+    el.appendChild(newBtn);
   }
 
   function buildTimeline(course) {
@@ -897,6 +1085,11 @@
   }
 
   function renderCourseContent() {
+    if (activeCourseId === NEW_TAB_ID) {
+      renderNewAnalysisForm();
+      return;
+    }
+
     var course = getActiveCourse();
     var content = document.getElementById("courseContent");
 
@@ -927,6 +1120,7 @@
           '<span class="stat-chip">' + escapeHtml(course.runtimeLabel) + '</span>' +
           '<span class="stat-chip">' + course.findings.length + ' findings</span>' +
         '</div>' +
+        (course.custom ? '<button class="remove-course-btn" id="removeCourseBtn">Remove this analysis</button>' : '') +
       '</header>' +
       (hasTimestamped ?
         '<div class="timeline-block">' +
@@ -972,6 +1166,20 @@
       });
     }
 
+    var removeBtn = document.getElementById("removeCourseBtn");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", function () {
+        var idx = -1;
+        COURSES.forEach(function (c, i) { if (c.id === course.id) idx = i; });
+        if (idx !== -1) COURSES.splice(idx, 1);
+        var customList = loadCustomCourses().filter(function (c) { return c.id !== course.id; });
+        saveCustomCourses(customList);
+        activeCourseId = COURSES.length ? COURSES[0].id : NEW_TAB_ID;
+        resolvedState = loadResolved(activeCourseId);
+        renderAll();
+      });
+    }
+
     var clearBtn = document.getElementById("clearFiltersBtn");
     if (clearBtn) {
       clearBtn.addEventListener("click", function () {
@@ -985,6 +1193,226 @@
         if (hasTimestamped) refreshTimelineDimming(course);
       });
     }
+  }
+
+  function slugify(str) {
+    var base = str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    return (base || "course") + "-" + Date.now().toString(36);
+  }
+
+  // Looks for SRT-style timestamps (00:05:38,827 --> 00:05:42,043) and
+  // returns the latest end time found, in seconds — or null if none found.
+  function detectRuntimeSeconds(text) {
+    var re = /(\d{2}):(\d{2}):(\d{2}),\d{3}\s*-->\s*(\d{2}):(\d{2}):(\d{2}),\d{3}/g;
+    var match;
+    var maxSeconds = null;
+    while ((match = re.exec(text)) !== null) {
+      var h = parseInt(match[4], 10), m = parseInt(match[5], 10), s = parseInt(match[6], 10);
+      var total = h * 3600 + m * 60 + s;
+      if (maxSeconds === null || total > maxSeconds) maxSeconds = total;
+    }
+    return maxSeconds;
+  }
+
+  function formatRuntimeLabel(seconds) {
+    if (seconds === null) return "Text-based analysis";
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s + " runtime";
+  }
+
+  var ANALYSIS_SYSTEM_PROMPT = [
+    "You are auditing an e-learning video transcript for an advanced learner audience.",
+    "Find genuine issues only \u2014 do not invent problems that aren't there, and do not pad the list to hit a target count.",
+    "Look for: technical inaccuracies, outdated information, terminology inconsistencies, missing important concepts, logically inconsistent statements, misleading examples, and grammar/spelling errors that could confuse a learner.",
+    "",
+    "Return ONLY a JSON array (no prose, no markdown code fences, no explanation before or after it). Each element must be an object with exactly these fields:",
+    '  "seconds": number or null \u2014 the timestamp in seconds where this issue occurs, if the transcript includes timing information near it. Use null if there is no clear timestamp, or if this is a general/missing-content issue with no single moment.',
+    '  "timecode": string or null \u2014 a short display label matching "seconds", formatted like "4:19". Use null when "seconds" is null.',
+    '  "severity": one of "critical", "high", "medium", "low", "gap" \u2014 use "gap" specifically for important missing content rather than a stated error.',
+    '  "category": a short 2-4 word tag, e.g. "Terminology", "Code shown", "Missing content".',
+    '  "title": a short, plain-language issue title \u2014 no jargon, something a non-expert could understand at a glance.',
+    '  "description": 2-4 plain-language sentences explaining the issue \u2014 avoid technical jargon where possible, or briefly explain any term you must use.',
+    '  "why": one or two sentences on why this matters for a learner.',
+    '  "fix": one or two sentences on what to change.',
+    "",
+    "If the transcript has no real issues in some area, do not force a finding there. It's fine to return an empty array if you genuinely find nothing worth flagging."
+  ].join("\n");
+
+  function callClaudeForAnalysis(transcriptText, apiKey) {
+    return fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        system: ANALYSIS_SYSTEM_PROMPT,
+        messages: [
+          { role: "user", content: "Here is the transcript to audit:\n\n" + transcriptText }
+        ]
+      })
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error("API returned " + res.status + ": " + t.slice(0, 300));
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var textBlock = (data.content || []).filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n");
+      var cleaned = textBlock.replace(/```json/gi, "").replace(/```/g, "").trim();
+      var parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        throw new Error("Could not parse the model's response as JSON. Raw response started with: " + cleaned.slice(0, 200));
+      }
+      if (!Array.isArray(parsed)) throw new Error("Expected a JSON array of findings but got something else.");
+      return parsed;
+    });
+  }
+
+  function renderNewAnalysisForm() {
+    var content = document.getElementById("courseContent");
+    var savedKey = "";
+    try { savedKey = sessionStorage.getItem("course-qa-api-key") || ""; } catch (e) { /* ignore */ }
+
+    content.innerHTML =
+      '<header class="hero">' +
+        '<p class="eyebrow">New analysis</p>' +
+        '<h1>Run a self-service first pass</h1>' +
+        '<p class="subtitle">Paste a transcript or .srt file below and this will call Claude to produce a first draft of findings, using your own API key.</p>' +
+      '</header>' +
+      '<div class="analysis-form">' +
+        '<div class="form-note"><strong>Before you run this:</strong> this calls the Anthropic API directly from your browser using the key you enter below. It\u2019s billed to your account, the key is never saved anywhere except your own browser session (unless you check \u201cremember on this device\u201d), and this pass is quicker but less thorough than a full manual audit \u2014 no video frame checks, no fact verification, just one AI read-through of the text you provide.</div>' +
+        '<div class="two-col">' +
+          '<div class="form-row">' +
+            '<label for="newCourseTitle">Video / course title</label>' +
+            '<input type="text" id="newCourseTitle" placeholder="e.g. Intro to Joins">' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<label for="newCourseOrg">Publisher / org <span class="hint">(optional)</span></label>' +
+            '<input type="text" id="newCourseOrg" placeholder="e.g. IBM Skills Network">' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<label for="apiKeyInput">Anthropic API key</label>' +
+          '<input type="password" id="apiKeyInput" placeholder="sk-ant-..." value="' + escapeHtml(savedKey) + '">' +
+          '<span class="hint">Get one at console.anthropic.com. Used only in your browser, sent only to Anthropic\u2019s API.</span>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<label class="checkbox-row"><input type="checkbox" id="rememberKey"> Remember this key on this device</label>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<label for="transcriptInput">Transcript or .srt content</label>' +
+          '<div class="file-btn-row">' +
+            '<button type="button" class="file-btn" id="fileBtn">Load a .txt or .srt file\u2026</button>' +
+            '<input type="file" id="fileInput" accept=".txt,.srt" style="display:none;">' +
+          '</div>' +
+          '<textarea id="transcriptInput" placeholder="Paste the transcript or .srt content here..."></textarea>' +
+          '<span class="hint">Text only \u2014 this form can\u2019t process .mp4 video or .tar course archives directly.</span>' +
+        '</div>' +
+        '<button class="run-btn" id="runAnalysisBtn">Run analysis</button>' +
+        '<div id="formStatus"></div>' +
+      '</div>';
+
+    document.getElementById("fileBtn").addEventListener("click", function () {
+      document.getElementById("fileInput").click();
+    });
+
+    document.getElementById("fileInput").addEventListener("change", function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function (evt) {
+        document.getElementById("transcriptInput").value = evt.target.result;
+        if (!document.getElementById("newCourseTitle").value) {
+          document.getElementById("newCourseTitle").value = file.name.replace(/\.(txt|srt)$/i, "").replace(/[_-]+/g, " ");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById("runAnalysisBtn").addEventListener("click", function () {
+      var titleEl = document.getElementById("newCourseTitle");
+      var orgEl = document.getElementById("newCourseOrg");
+      var keyEl = document.getElementById("apiKeyInput");
+      var textEl = document.getElementById("transcriptInput");
+      var rememberEl = document.getElementById("rememberKey");
+      var statusEl = document.getElementById("formStatus");
+      var btn = document.getElementById("runAnalysisBtn");
+
+      var title = titleEl.value.trim();
+      var org = orgEl.value.trim() || "Self-service analysis";
+      var apiKey = keyEl.value.trim();
+      var transcript = textEl.value.trim();
+
+      statusEl.innerHTML = "";
+
+      if (!title) { statusEl.innerHTML = '<div class="form-error">Add a title so this shows up clearly in the course list.</div>'; return; }
+      if (!apiKey) { statusEl.innerHTML = '<div class="form-error">An API key is required to run this.</div>'; return; }
+      if (!transcript) { statusEl.innerHTML = '<div class="form-error">Paste a transcript or load a file first.</div>'; return; }
+
+      try {
+        if (rememberEl.checked) {
+          localStorage.setItem("course-qa-api-key", apiKey);
+          sessionStorage.setItem("course-qa-api-key", apiKey);
+        } else {
+          sessionStorage.setItem("course-qa-api-key", apiKey);
+        }
+      } catch (e) { /* ignore */ }
+
+      btn.disabled = true;
+      btn.textContent = "Analyzing\u2026";
+      statusEl.innerHTML = '<p class="form-status">Sending transcript to Claude \u2014 this can take a moment for longer transcripts.</p>';
+
+      var runtimeSeconds = detectRuntimeSeconds(transcript);
+
+      callClaudeForAnalysis(transcript, apiKey).then(function (rawFindings) {
+        var findings = rawFindings.map(function (f, i) {
+          return {
+            id: "f" + (i + 1),
+            seconds: (typeof f.seconds === "number") ? f.seconds : null,
+            timecode: f.timecode || null,
+            severity: ["critical", "high", "medium", "low", "gap"].indexOf(f.severity) !== -1 ? f.severity : "medium",
+            category: f.category || "General",
+            title: f.title || "Untitled finding",
+            description: f.description || "",
+            why: f.why || "",
+            fix: f.fix || ""
+          };
+        });
+
+        var newCourse = {
+          id: slugify(title),
+          org: org,
+          name: title,
+          runtimeLabel: formatRuntimeLabel(runtimeSeconds),
+          runtimeSeconds: runtimeSeconds,
+          status: "reviewed",
+          findings: findings,
+          custom: true
+        };
+
+        COURSES.push(newCourse);
+        var customList = loadCustomCourses();
+        customList.push(newCourse);
+        saveCustomCourses(customList);
+
+        activeCourseId = newCourse.id;
+        renderAll();
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = "Run analysis";
+        statusEl.innerHTML = '<div class="form-error">Something went wrong: ' + escapeHtml(err.message) +
+          '<br><br>Common causes: an invalid or restricted API key, no network access to api.anthropic.com, or a very long transcript. Double check the key at console.anthropic.com and try again.</div>';
+      });
+    });
   }
 
   function renderAll() {
