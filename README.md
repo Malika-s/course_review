@@ -33,6 +33,39 @@ site (see **Deploying to GitHub Pages** below).
 - A **course switcher** at the top lets you flip between multiple audited
   courses/videos in the same app.
 
+## Self-service analysis (new)
+
+The app now has a **"+ New analysis"** tab. It lets you paste a transcript
+(or load a `.txt`/`.srt` file) and calls the Claude API directly from your
+browser, using your own Anthropic API key, to generate a first-pass set of
+findings — without needing to come back to a chat conversation.
+
+**Important limitations, on purpose:**
+
+- **This does not work on a claude.ai artifact preview link.** Anthropic's
+  sandboxed preview environment blocks pages from calling its own API
+  directly, for security reasons. This feature only works once the file is
+  deployed somewhere normal — GitHub Pages, any static host, or opened
+  locally in a browser.
+- **It's a lighter pass, not a full audit.** One AI read-through of the
+  text you paste — no video frame extraction, no fact-checking against
+  outside sources, no code execution. Good for a fast first draft; treat
+  the output as a starting point to verify, not a final report.
+- **Text only.** It can't process `.mp4` video or `.tar`/`.zip` course
+  archives directly — only plain text or `.srt` content.
+- **It's billed to your own Anthropic account.** The API key you enter is
+  used only in your browser (sent directly to `api.anthropic.com`) and is
+  never written into the file itself. Checking "remember this key on this
+  device" stores it in that browser's local storage, on that device only.
+
+Findings generated this way are stored per-browser (in `localStorage`)
+alongside your other courses, and show up as a removable tab — there's a
+"Remove this analysis" button if you want to clear one out.
+
+If you want the deeper, verified kind of audit (the one behind the
+Word2Vec and SQLedX entries), that still happens in a full conversation —
+paste the same transcript there instead of using this tab.
+
 ## Adding a new course or video
 
 All content lives in one place: the `COURSES` array near the top of the
