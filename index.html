@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course QA Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14171c;
+    --panel: #1b1f26;
+    --panel-2: #20242c;
+    --border: #2b3038;
+    --text: #ece9e2;
+    --text-dim: #9aa1ac;
+    --text-faint: #666d78;
+    --accent: #e8a33d;
+    --accent-soft: rgba(232, 163, 61, 0.14);
+
+    --critical: #e15554;
+    --critical-soft: rgba(225, 85, 84, 0.14);
+    --high: #e8a33d;
+    --high-soft: rgba(232, 163, 61, 0.14);
+    --medium: #4c8bf5;
+    --medium-soft: rgba(76, 139, 245, 0.14);
+    --low: #8a92a0;
+    --low-soft: rgba(138, 146, 160, 0.14);
+    --gap: #4fbf9f;
+    --gap-soft: rgba(79, 191, 159, 0.14);
+
+    --radius: 6px;
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f6f4ef;
+      --panel: #ffffff;
+      --panel-2: #f0ede5;
+      --border: #ddd7c9;
+      --text: #1b1f26;
+      --text-dim: #5b6570;
+      --text-faint: #8b93a0;
+      --accent: #b56f16;
+      --accent-soft: rgba(181, 111, 22, 0.10);
+      --critical: #c73e3d;
+      --critical-soft: rgba(199, 62, 61, 0.10);
+      --high: #b56f16;
+      --high-soft: rgba(181, 111, 22, 0.10);
+      --medium: #2f68c9;
+      --medium-soft: rgba(47, 104, 201, 0.10);
+      --low: #6b7280;
+      --low-soft: rgba(107, 114, 128, 0.10);
+      --gap: #2f9678;
+      --gap-soft: rgba(47, 150, 120, 0.10);
+      color-scheme: light;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f6f4ef;
+    --panel: #ffffff;
+    --panel-2: #f0ede5;
+    --border: #ddd7c9;
+    --text: #1b1f26;
+    --text-dim: #5b6570;
+    --text-faint: #8b93a0;
+    --accent: #b56f16;
+    --accent-soft: rgba(181, 111, 22, 0.10);
+    --critical: #c73e3d;
+    --critical-soft: rgba(199, 62, 61, 0.10);
+    --high: #b56f16;
+    --high-soft: rgba(181, 111, 22, 0.10);
+    --medium: #2f68c9;
+    --medium-soft: rgba(47, 104, 201, 0.10);
+    --low: #6b7280;
+    --low-soft: rgba(107, 114, 128, 0.10);
+    --gap: #2f9678;
+    --gap-soft: rgba(47, 150, 120, 0.10);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 32px 20px 80px;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    z-index: 20;
+  }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- app header ---------- */
+
+  .app-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .app-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* ---------- course switcher ---------- */
+
+  .course-switcher {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 18px;
+  }
+
+  .course-tab {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    text-align: left;
+    max-width: 260px;
+    transition: border-color 0.15s ease;
+  }
+
+  .course-tab .tab-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .course-tab .tab-meta {
+    display: block;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+  }
+
+  .course-tab.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .course-tab.active .tab-name { color: var(--accent); }
+
+  .course-tab.placeholder {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  .course-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- header / hero ---------- */
+
+  header.hero {
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: 27px;
+    line-height: 1.25;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin: 0 0 20px;
+    max-width: 64ch;
+  }
+
+  .stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .stat-chip {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px;
+  }
+
+  /* ---------- timeline ---------- */
+
+  .timeline-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 20px 16px;
+    margin: 22px 0;
+  }
+
+  .timeline-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+
+  .timeline {
+    position: relative;
+    height: 34px;
+    background: var(--panel-2);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .timeline-marker {
+    position: absolute;
+    top: 4px;
+    width: 6px;
+    height: 26px;
+    border-radius: 3px;
+    transform: translateX(-3px);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .timeline-marker:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  .timeline-marker.dimmed { opacity: 0.22; }
+
+  .timeline-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 2px;
+    font-family: var(--font-body);
+  }
+  .legend-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  .legend-item.off { opacity: 0.4; }
+
+  .swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ---------- controls ---------- */
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .search-input {
+    flex: 1 1 220px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .search-input::placeholder { color: var(--text-faint); }
+  .search-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  select.sort-select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 9px 10px;
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+
+  .count-line {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin-bottom: 14px;
+  }
+
+  /* ---------- cards ---------- */
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--sev-color, var(--border));
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    transition: opacity 0.15s ease, border-left-width 0.4s ease;
+  }
+
+  .card.resolved {
+    opacity: 0.5;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .card-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tc-chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  .sev-pill {
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 2px 10px;
+    color: var(--sev-color);
+    background: var(--sev-soft);
+    white-space: nowrap;
+  }
+
+  .card h3 {
+    font-size: 16.5px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    line-height: 1.35;
+  }
+
+  .card p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 0 0 10px;
+  }
+
+  .card .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-faint);
+    margin: 0 0 3px;
+  }
+
+  .field-block {
+    margin-bottom: 10px;
+  }
+  .field-block:last-of-type { margin-bottom: 12px; }
+
+  .card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+
+  .resolve-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .resolve-label input {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .category-tag {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-dim);
+    font-size: 14.5px;
+  }
+  .empty-state button {
+    margin-top: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 7px 14px;
+    font-size: 13.5px;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  .no-course-state {
+    text-align: center;
+    padding: 70px 20px;
+    color: var(--text-dim);
+    font-size: 14.5px;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  footer.note {
+    margin-top: 30px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    max-width: 64ch;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 22px; }
+    .card { padding: 15px 16px; }
+    .course-tab { max-width: 100%; flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark theme">🌓</button>
+
+<div class="wrap">
+
+  <div class="app-title-row">
+    <span class="app-title">COURSE QA REVIEW</span>
+  </div>
+
+  <div class="course-switcher" id="courseSwitcher"></div>
+
+  <div id="courseContent"></div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SEVERITIES = {
+    critical: { label: "Critical", color: "var(--critical)", soft: "var(--critical-soft)" },
+    high:     { label: "High",     color: "var(--high)",     soft: "var(--high-soft)" },
+    medium:   { label: "Medium",   color: "var(--medium)",   soft: "var(--medium-soft)" },
+    low:      { label: "Low",      color: "var(--low)",      soft: "var(--low-soft)" },
+    gap:      { label: "Missing content", color: "var(--gap)", soft: "var(--gap-soft)" }
+  };
+
+  var SEV_ORDER = { critical: 0, high: 1, medium: 2, low: 3, gap: 4 };
+
+  // ---------------------------------------------------------------
+  // COURSE DATA
+  // Add a new entry to this array for each audited video/course.
+  // Set findings: [] and status: "pending" for a course that's been
+  // added to the tracker but not yet audited.
+  // ---------------------------------------------------------------
+  var COURSES = [
+    {
+      id: "word2vec",
+      org: "IBM Skills Network",
+      name: "Word2Vec Introduction and CBOW Models",
+      runtimeLabel: "5:55 runtime",
+      runtimeSeconds: 355,
+      status: "reviewed",
+      findings: [
+        {
+          id: "f1",
+          seconds: 38,
+          timecode: "0:38",
+          severity: "critical",
+          category: "Example used",
+          title: "The \u201cking \u2212 man = queen\u201d example is wrong",
+          description: "The video says that if you take the vector for \u201cking\u201d and subtract \u201cman,\u201d you get something close to \u201cqueen.\u201d That's not actually true. The real trick needs one more step: king \u2212 man + woman \u2248 queen. Leaving out \u201c+ woman\u201d isn't a small simplification \u2014 it changes what the example is showing, and it's one of the most well-known facts about word vectors, so it's easy for someone to double check and notice it's off.",
+          why: "This is the single most memorable example in the video. If a learner repeats it, uses it in an interview, or tries to reproduce it and gets a different result, they'll be confused \u2014 and rightly so, because the claim as stated doesn't hold up.",
+          fix: "Update the line to include the missing step: \u201csubtracting the vector for \u2018man\u2019 from \u2018king,\u2019 then adding \u2018woman,\u2019 yields a vector close to \u2018queen.\u2019\u201d"
+        },
+        {
+          id: "f2",
+          seconds: 259,
+          timecode: "4:19",
+          severity: "high",
+          category: "Code shown",
+          title: "The code quietly adds an extra step that isn't standard",
+          description: "The code includes an extra math step (called ReLU) between two parts of the network. The original, textbook version of this model is specifically designed to skip that kind of step \u2014 that's actually one of the reasons the original method was fast enough to be useful. The video never mentions that this version adds something the standard approach doesn't have.",
+          why: "A learner who later reads about this model elsewhere, or in the original research, will find a mismatch and may think either the video or the other source is wrong \u2014 when really, this version is just a variation that was never flagged as one.",
+          fix: "Either remove that extra step to match the standard approach, or add a line noting: \u201cthis version includes an extra step beyond the original design.\u201d"
+        },
+        {
+          id: "f3",
+          seconds: 243,
+          timecode: "4:03",
+          severity: "medium",
+          category: "Code shown",
+          title: "A variable is created in the code but never used",
+          description: "The code sets up a value called num_class when building the model, but that value is never actually used anywhere afterward \u2014 the code uses a different, already-existing value instead. It just sits there, unused.",
+          why: "Anyone copying this code into their own project inherits confusing, dead code and may waste time trying to figure out what num_class is supposed to do.",
+          fix: "Either delete the unused value, or actually use it where the output size is being set."
+        },
+        {
+          id: "f4",
+          seconds: 288,
+          timecode: "4:48",
+          severity: "medium",
+          category: "Consistency",
+          title: "The worked example and the actual code don't use the same settings",
+          description: "Earlier, the video walks through an example using 1 word of context on each side of the target word. But when the code actually runs, it's set to use 2 words of context on each side instead. Nobody mentions or explains the change.",
+          why: "A learner trying to match the hand-worked example to the code's output will get confused when the numbers don't line up, and may think they misunderstood something \u2014 when the material is just inconsistent.",
+          fix: "Either change the code to match the example (1 word each side), or add a line explaining why it's being widened to 2."
+        },
+        {
+          id: "f5",
+          seconds: 135,
+          timecode: "2:15",
+          severity: "medium",
+          category: "Terminology",
+          title: "The same part of the model is given two different names",
+          description: "The on-screen diagrams label the middle part of the network \u201chidden layer.\u201d The narrator calls that same part the \u201cembedding layer\u201d throughout. They're the same thing \u2014 but nothing on screen ever says so.",
+          why: "A learner comparing notes or a quiz question might think these are two separate parts of the network, rather than one part with two names.",
+          fix: "Pick one name and use it consistently in both the diagrams and the narration, or add a one-time note that the two terms mean the same thing here."
+        },
+        {
+          id: "f6",
+          seconds: 277,
+          timecode: "4:37",
+          severity: "medium",
+          category: "Consistency",
+          title: "\u201cOne-hot vectors\u201d is said, but the code does something else",
+          description: "The narrator says words are \u201cencoded as one-hot vectors\u201d before going into the model. But the actual code shown minutes later skips that step entirely and uses a shortcut (a simple ID number per word) instead \u2014 which is the whole point of the PyTorch tool being used.",
+          why: "A learner who looks closely at the code after hearing \u201cone-hot vectors\u201d may think the code doesn't match what they were just taught, when really both are valid \u2014 they're just different levels of description that were never connected.",
+          fix: "Add a line bridging the two: \u201cconceptually, this is a one-hot vector; in practice, the code uses a shortcut \u2014 a word ID number \u2014 to get the same result more efficiently.\u201d"
+        },
+        {
+          id: "f7",
+          seconds: 260,
+          timecode: "4:20",
+          severity: "low",
+          category: "Wording",
+          title: "\u201cLogic value\u201d should be \u201clogit value\u201d",
+          description: "The video says \u201clogic value\u201d twice, in both the narration and the captions. The correct term is \u201clogit value\u201d \u2014 a specific, real term used throughout machine learning for a network's raw output score before it's turned into a probability.",
+          why: "It's a small thing, but it's a real term with a specific meaning \u2014 a learner searching for \u201clogic value\u201d afterward to learn more won't find anything relevant.",
+          fix: "Correct \u201clogic value\u201d to \u201clogit value\u201d in the captions and, ideally, the spoken audio."
+        },
+        {
+          id: "f8",
+          seconds: 75,
+          timecode: "1:15",
+          severity: "low",
+          category: "Slide accuracy",
+          title: "A slide's numbers don't quite add up",
+          description: "One diagram shows a set of probability values that are supposed to add up to exactly 1.0 (100%). Adding them up, they actually come to 1.1.",
+          why: "It's minor and easy to miss, but a sharp-eyed learner who checks the math will notice the numbers don't work.",
+          fix: "Adjust one of the values on the slide so the full set adds up to exactly 1.0."
+        },
+        {
+          id: "f9",
+          seconds: 20,
+          timecode: "0:20",
+          severity: "low",
+          category: "Precision",
+          title: "\u201cSimilar meaning\u201d is a helpful shortcut, but not quite the full picture",
+          description: "The video says words like \u201cking\u201d and \u201cman\u201d end up close together because they have \u201csimilar meanings.\u201d That's a reasonable simplification \u2014 but the more accurate reason is that they tend to appear in similar sentences. Most of the time that lines up with meaning, but not always.",
+          why: "This is a small precision gap rather than an error \u2014 worth a mention for a course aimed at an advanced audience, since it explains cases where the model gets things \u201cwrong\u201d in surprising ways.",
+          fix: "Optionally add \u201c...because they tend to appear in similar contexts, which usually lines up with similar meaning.\u201d"
+        },
+        {
+          id: "f10",
+          seconds: null,
+          timecode: null,
+          severity: "gap",
+          category: "Missing content",
+          title: "The other half of Word2Vec \u2014 Skip-gram \u2014 is never mentioned",
+          description: "Word2Vec usually refers to two related models: CBOW (covered here) and Skip-gram, which works the opposite way around. This video only covers one of the two, and doesn't mention that the other one exists.",
+          why: "A learner may walk away thinking CBOW is the whole story, and be caught off guard when Skip-gram comes up elsewhere. (Worth checking first whether a separate video already covers it.)",
+          fix: "If no other video covers it, add a short segment introducing Skip-gram alongside CBOW. If one already exists, add a one-line pointer to it."
+        },
+        {
+          id: "f11",
+          seconds: null,
+          timecode: null,
+          severity: "gap",
+          category: "Missing content",
+          title: "No mention of how real-world vocabularies are handled",
+          description: "The approach shown checks the probability of every single word in the vocabulary each time. That's fine for a tiny example with 4 words, but painfully slow for a real vocabulary with 100,000+ words. Real Word2Vec setups use shortcuts to make this practical, and the video never brings that up.",
+          why: "Without this, a learner might assume the toy version shown scales up to real-world use as-is, and be surprised when it doesn't.",
+          fix: "Add a short note that production setups use faster shortcuts to avoid checking every word in the vocabulary every time."
+        },
+        {
+          id: "f12",
+          seconds: null,
+          timecode: null,
+          severity: "gap",
+          category: "Missing content",
+          title: "No mention of where Word2Vec fits today",
+          description: "Word2Vec is from 2013. It always produces the same vector for a word no matter how it's used in a sentence. Newer models (like the ones behind modern chatbots) generate different vectors depending on context. The video doesn't mention this distinction at all.",
+          why: "In a course covering current AI trends, learners benefit from knowing whether what they're learning is still current practice or a foundational stepping stone \u2014 both are valuable to know, but for different reasons.",
+          fix: "Add a sentence noting that Word2Vec produces a fixed vector per word, while modern models adjust the vector based on context."
+        },
+        {
+          id: "f13",
+          seconds: null,
+          timecode: null,
+          severity: "gap",
+          category: "Missing content",
+          title: "No way to check if the trained result is actually any good",
+          description: "After walking through how to build the model, the video doesn't mention how you'd tell whether the word vectors you end up with are actually useful or just noise.",
+          why: "A learner who follows along and trains their own model has no way to sanity-check the result.",
+          fix: "Add a quick tip \u2014 for example, checking which words end up closest to a given word \u2014 as a simple way to eyeball whether training worked."
+        }
+      ]
+    },
+    {
+      id: "sqledx",
+      org: "IBM Skills Network",
+      name: "SQLedX (DB0201EN) \u2014 full SQL course",
+      runtimeLabel: "11 chapters \u00b7 26 videos \u00b7 70 problems",
+      runtimeSeconds: null,
+      status: "pending",
+      findings: []
+    }
+  ];
+
+  var activeCourseId = COURSES[0].id;
+  var activeFilters = { critical: true, high: true, medium: true, low: true, gap: true };
+  var searchTerm = "";
+  var sortMode = "time";
+
+  function getStorageKey(courseId) {
+    return "course-qa-resolved-" + courseId;
+  }
+
+  function loadResolved(courseId) {
+    try {
+      var raw = localStorage.getItem(getStorageKey(courseId));
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveResolved(courseId, state) {
+    try {
+      localStorage.setItem(getStorageKey(courseId), JSON.stringify(state));
+    } catch (e) {
+      /* storage unavailable — state just won't persist */
+    }
+  }
+
+  var resolvedState = loadResolved(activeCourseId);
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function getActiveCourse() {
+    var found = null;
+    COURSES.forEach(function (c) { if (c.id === activeCourseId) found = c; });
+    return found;
+  }
+
+  function buildSwitcher() {
+    var el = document.getElementById("courseSwitcher");
+    el.innerHTML = "";
+    COURSES.forEach(function (c) {
+      var btn = document.createElement("button");
+      btn.className = "course-tab" + (c.id === activeCourseId ? " active" : "") + (c.status === "pending" ? " placeholder" : "");
+      var metaText = c.status === "pending" ? "Not audited yet" : c.findings.length + " findings \u00b7 " + c.runtimeLabel;
+      btn.innerHTML = '<span class="tab-name">' + escapeHtml(c.name) + '</span><span class="tab-meta">' + escapeHtml(metaText) + '</span>';
+      btn.addEventListener("click", function () {
+        if (activeCourseId === c.id) return;
+        activeCourseId = c.id;
+        resolvedState = loadResolved(activeCourseId);
+        searchTerm = "";
+        Object.keys(activeFilters).forEach(function (k) { activeFilters[k] = true; });
+        renderAll();
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  function buildTimeline(course) {
+    var track = document.getElementById("timeline");
+    if (!track) return;
+    track.innerHTML = "";
+    course.findings.forEach(function (f) {
+      if (f.seconds === null) return;
+      var pct = (f.seconds / course.runtimeSeconds) * 100;
+      var btn = document.createElement("button");
+      btn.className = "timeline-marker";
+      btn.style.left = pct + "%";
+      btn.style.background = SEVERITIES[f.severity].color;
+      btn.title = f.timecode + " — " + f.title;
+      btn.setAttribute("aria-label", "Jump to finding at " + f.timecode + ": " + f.title);
+      btn.addEventListener("click", function () {
+        var target = document.getElementById("card-" + f.id);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.style.borderLeftWidth = "6px";
+          setTimeout(function () { target.style.borderLeftWidth = "3px"; }, 350);
+        }
+      });
+      track.appendChild(btn);
+    });
+    refreshTimelineDimming(course);
+  }
+
+  function refreshTimelineDimming(course) {
+    var track = document.getElementById("timeline");
+    if (!track) return;
+    var markers = track.querySelectorAll(".timeline-marker");
+    var idx = 0;
+    course.findings.forEach(function (f) {
+      if (f.seconds === null) return;
+      var m = markers[idx];
+      if (m) m.classList.toggle("dimmed", !activeFilters[f.severity]);
+      idx++;
+    });
+  }
+
+  function buildLegend(course) {
+    var legend = document.getElementById("legend");
+    if (!legend) return;
+    legend.innerHTML = "";
+    Object.keys(SEVERITIES).forEach(function (key) {
+      var count = course.findings.filter(function (f) { return f.severity === key; }).length;
+      if (count === 0) return;
+      var item = document.createElement("button");
+      item.className = "legend-item";
+      item.type = "button";
+      item.innerHTML = '<span class="swatch" style="background:' + SEVERITIES[key].color + '"></span>' +
+        SEVERITIES[key].label + " (" + count + ")";
+      item.addEventListener("click", function () {
+        activeFilters[key] = !activeFilters[key];
+        item.classList.toggle("off", !activeFilters[key]);
+        renderList(course);
+        refreshTimelineDimming(course);
+      });
+      legend.appendChild(item);
+    });
+  }
+
+  function cardHtml(f) {
+    var sev = SEVERITIES[f.severity];
+    var isResolved = !!resolvedState[f.id];
+    var tcChip = f.timecode ? '<span class="tc-chip">' + f.timecode + '</span>' : '<span class="tc-chip">General</span>';
+    return (
+      '<div class="card' + (isResolved ? ' resolved' : '') + '" id="card-' + f.id + '" style="--sev-color:' + sev.color + '; --sev-soft:' + sev.soft + '">' +
+        '<div class="card-top">' +
+          '<div class="card-tags">' +
+            tcChip +
+            '<span class="sev-pill">' + sev.label + '</span>' +
+            '<span class="category-tag">' + escapeHtml(f.category) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<h3>' + escapeHtml(f.title) + '</h3>' +
+        '<div class="field-block"><p>' + escapeHtml(f.description) + '</p></div>' +
+        '<div class="field-block"><p class="field-label">Why it matters</p><p>' + escapeHtml(f.why) + '</p></div>' +
+        '<div class="field-block"><p class="field-label">Suggested fix</p><p>' + escapeHtml(f.fix) + '</p></div>' +
+        '<div class="card-foot">' +
+          '<label class="resolve-label">' +
+            '<input type="checkbox" data-id="' + f.id + '" ' + (isResolved ? "checked" : "") + '>' +
+            'Mark reviewed' +
+          '</label>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function matchesSearch(f, term) {
+    if (!term) return true;
+    var haystack = (f.title + " " + f.description + " " + f.category).toLowerCase();
+    return haystack.indexOf(term.toLowerCase()) !== -1;
+  }
+
+  function renderList(course) {
+    var list = course.findings.filter(function (f) {
+      return activeFilters[f.severity] && matchesSearch(f, searchTerm);
+    });
+
+    if (sortMode === "time") {
+      list.sort(function (a, b) {
+        var as = a.seconds === null ? Infinity : a.seconds;
+        var bs = b.seconds === null ? Infinity : b.seconds;
+        return as - bs;
+      });
+    } else {
+      list.sort(function (a, b) { return SEV_ORDER[a.severity] - SEV_ORDER[b.severity]; });
+    }
+
+    var container = document.getElementById("cardList");
+    var empty = document.getElementById("emptyState");
+    if (!container) return;
+
+    if (list.length === 0) {
+      container.innerHTML = "";
+      if (empty) empty.style.display = "block";
+    } else {
+      if (empty) empty.style.display = "none";
+      container.innerHTML = list.map(cardHtml).join("");
+    }
+
+    var countLine = document.getElementById("countLine");
+    if (countLine) countLine.textContent = "Showing " + list.length + " of " + course.findings.length + " findings";
+
+    Array.prototype.forEach.call(container.querySelectorAll('input[type="checkbox"]'), function (cb) {
+      cb.addEventListener("change", function () {
+        var id = cb.getAttribute("data-id");
+        resolvedState[id] = cb.checked;
+        saveResolved(course.id, resolvedState);
+        var card = document.getElementById("card-" + id);
+        if (card) card.classList.toggle("resolved", cb.checked);
+      });
+    });
+  }
+
+  function renderCourseContent() {
+    var course = getActiveCourse();
+    var content = document.getElementById("courseContent");
+
+    if (course.status === "pending") {
+      content.innerHTML =
+        '<header class="hero">' +
+          '<p class="eyebrow">Course QA review</p>' +
+          '<h1>' + escapeHtml(course.name) + '</h1>' +
+          '<p class="subtitle">This course is on the list but hasn\u2019t been audited yet.</p>' +
+          '<div class="stat-row">' +
+            '<span class="stat-chip">' + escapeHtml(course.org) + '</span>' +
+            '<span class="stat-chip">' + escapeHtml(course.runtimeLabel) + '</span>' +
+          '</div>' +
+        '</header>' +
+        '<div class="no-course-state">No findings yet \u2014 audit this course to populate it here.</div>';
+      return;
+    }
+
+    var hasTimestamped = course.findings.some(function (f) { return f.seconds !== null; });
+
+    content.innerHTML =
+      '<header class="hero">' +
+        '<p class="eyebrow">Course QA review</p>' +
+        '<h1>' + escapeHtml(course.name) + '</h1>' +
+        '<p class="subtitle">Every issue found, explained in plain language \u2014 where it happens, why it matters, and what to change.</p>' +
+        '<div class="stat-row">' +
+          '<span class="stat-chip">' + escapeHtml(course.org) + '</span>' +
+          '<span class="stat-chip">' + escapeHtml(course.runtimeLabel) + '</span>' +
+          '<span class="stat-chip">' + course.findings.length + ' findings</span>' +
+        '</div>' +
+      '</header>' +
+      (hasTimestamped ?
+        '<div class="timeline-block">' +
+          '<div class="timeline-label-row"><span>0:00</span><span>Where issues happen in the video</span><span>' + escapeHtml(course.runtimeLabel.split(" ")[0]) + '</span></div>' +
+          '<div class="timeline" id="timeline"></div>' +
+          '<div class="timeline-legend" id="legend"></div>' +
+        '</div>'
+        : '<div class="timeline-block"><div class="timeline-legend" id="legend"></div></div>'
+      ) +
+      '<div class="controls">' +
+        '<input type="text" class="search-input" id="searchInput" placeholder="Search findings…" aria-label="Search findings">' +
+        '<select class="sort-select" id="sortSelect" aria-label="Sort findings">' +
+          '<option value="time">Sort: video order</option>' +
+          '<option value="severity">Sort: severity</option>' +
+        '</select>' +
+      '</div>' +
+      '<p class="count-line" id="countLine"></p>' +
+      '<div id="cardList"></div>' +
+      '<div class="empty-state" id="emptyState" style="display:none;">' +
+        'Nothing matches those filters.<br>' +
+        '<button id="clearFiltersBtn">Clear filters</button>' +
+      '</div>' +
+      '<footer class="note">\u201cMark reviewed\u201d only affects what you see in this browser \u2014 it isn\u2019t shared with anyone else looking at this page, and it resets if your browser storage is cleared.</footer>';
+
+    if (hasTimestamped) buildTimeline(course);
+    buildLegend(course);
+    renderList(course);
+
+    var searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.addEventListener("input", function (e) {
+        searchTerm = e.target.value;
+        renderList(course);
+      });
+    }
+
+    var sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) {
+      sortSelect.value = sortMode;
+      sortSelect.addEventListener("change", function (e) {
+        sortMode = e.target.value;
+        renderList(course);
+      });
+    }
+
+    var clearBtn = document.getElementById("clearFiltersBtn");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function () {
+        Object.keys(activeFilters).forEach(function (k) { activeFilters[k] = true; });
+        searchTerm = "";
+        if (searchInput) searchInput.value = "";
+        Array.prototype.forEach.call(document.querySelectorAll(".legend-item"), function (el) {
+          el.classList.remove("off");
+        });
+        renderList(course);
+        if (hasTimestamped) refreshTimelineDimming(course);
+      });
+    }
+  }
+
+  function renderAll() {
+    buildSwitcher();
+    renderCourseContent();
+  }
+
+  var themeToggle = document.getElementById("themeToggle");
+  function applyStoredTheme() {
+    try {
+      var stored = localStorage.getItem("course-qa-theme");
+      if (stored) document.documentElement.setAttribute("data-theme", stored);
+    } catch (e) { /* ignore */ }
+  }
+  applyStoredTheme();
+  themeToggle.addEventListener("click", function () {
+    var current = document.documentElement.getAttribute("data-theme");
+    var isDark = current ? current === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("course-qa-theme", next); } catch (e) { /* ignore */ }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
